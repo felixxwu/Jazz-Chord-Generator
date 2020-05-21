@@ -20,16 +20,16 @@ from networks.checkpoint import saveCheckpoint, loadCheckpoint
 
 window_size = 5
 early_stopping_ratio = 0.3
-hidden_layers = [100]
+hidden_layers = [1000]
 num_epochs = 5000
 batch_size = 100
 learning_rate = 0.0005
 train_val_split = 0.85
 gpu = torch.cuda.is_available()
 
-architecture = 'FNN'
+# architecture = 'FNN'
 # architecture = 'CNN/12/12/12'
-# architecture = 'LSTM/1'
+architecture = 'LSTM/1'
 # EXTRAS:
 # CNN/kernels/flip/stride
 # LSTM/bias
