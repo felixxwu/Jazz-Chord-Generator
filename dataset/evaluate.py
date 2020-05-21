@@ -7,7 +7,7 @@ class Evaluate:
     def accuracy(self, network, x_val, y_val, gpu):
         correct = 0
         total = 0
-        for (inputs, labels) in zip(x_val, y_val):
+        for index, (inputs, labels) in enumerate(zip(x_val, y_val)):
             inputs = torch.tensor(inputs)
             labels = torch.tensor(labels)
 
@@ -19,6 +19,7 @@ class Evaluate:
             for i, output in enumerate(outputs):
                 correct += self.evalOneHot(output.tolist(), labels[i].tolist())
                 total += 1
+            print(f'Calculating accuracy: {index}/{len(x_val)}', end='\r')
 
         return correct / total
 
