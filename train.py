@@ -75,8 +75,8 @@ def shouldEarlyStop():
 print('Training...', flush=True)
 for epoch in range(num_epochs):
     running_loss = 0.0
-    for (inputs, labels) in zip(x_train, y_train):
-        # print('.', end='', flush=True)
+    for index, (inputs, labels) in enumerate(zip(x_train, y_train)):
+        print(f"{index}/{len(x_train)}", end='\r', flush=True)
         inputs = torch.tensor(inputs)
         labels = torch.tensor(labels)
         if gpu:
@@ -90,7 +90,6 @@ for epoch in range(num_epochs):
         optimizer.step()                                  # Optimizer: update the weights of hidden nodes
         
         running_loss += loss.item()
-    # print()
         
     val_acc = dataset.getAccuracy(net, x_val, y_val, gpu)
     train_acc = dataset.getAccuracy(net, x_train, y_train, gpu)
