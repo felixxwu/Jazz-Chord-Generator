@@ -12,6 +12,7 @@ class Evaluate:
             labels = torch.tensor(labels)
 
             if gpu:
+                network.cuda()
                 inputs = inputs.cuda()
                 labels = labels.cuda()
 

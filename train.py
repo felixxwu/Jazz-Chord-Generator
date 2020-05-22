@@ -23,7 +23,7 @@ early_stopping_ratio = 0.3
 hidden_layers = [1000]
 num_epochs = 5000
 batch_size = 100
-learning_rate = 0.0005
+learning_rate = 0.0001
 train_val_split = 0.85
 gpu = torch.cuda.is_available()
 
