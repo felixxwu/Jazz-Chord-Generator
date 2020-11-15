@@ -20,7 +20,7 @@ from networks.checkpoint import saveCheckpoint, loadCheckpoint
 
 window_size = 5
 early_stopping_ratio = 0.3
-hidden_layers = [1000]
+hidden_layers = [1069]
 num_epochs = 5000
 batch_size = 100
 learning_rate = 0.0001

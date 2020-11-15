@@ -64,7 +64,7 @@ class Dataset:
                 i += 1
         assert len(x) == len(y)
         zipped = list(zip(x, y))
-        random.seed(420)
+        random.seed(69)
         random.shuffle(zipped)
         assert split > 0
         assert split < 1
