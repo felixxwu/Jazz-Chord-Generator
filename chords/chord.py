@@ -47,3 +47,13 @@ class Chord:
 
     def toSymbol(self, key=0, includeRoot=True, keyLess=False) -> str:
         return Symbol((self.root + key) % 12, self.components, self.bass).toString(includeRoot, keyLess)
+
+    def getNotes(self, key=0):
+        notes = []
+        notes += [Note((self.root + key) % 12).toSymbol() + "4"]
+        for component in self.components:
+            notes += [Note((self.root + component + key) % 12).toSymbol() + "4"]
+        return notes
+
+    def getJson(self):
+        return {"root": self.root, "components": self.components}

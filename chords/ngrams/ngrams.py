@@ -2,21 +2,28 @@ import operator
 import json
 import numpy as np
 import random
+from chords.chord import Chord
 
 class NGrams:
-    def __init__(self, sequences, N):
+    def __init__(self, sequences):
         self.sequences = sequences
-        self.N = N
         self.ngrams = {}
         self.total = 0
         self.sortedNgrams = None
 
-        print(f'building n = {N}', flush=True)
-        self.build(N)
+        # print(f'building n = {N}', flush=True)
+        # self.build(N)
 
-    def getNext(self, words):
+    def getRandom(self):
+        return random.choice(random.choice(self.sequences))
+
+    def getNext(self, words, exclude = []):
         if len(words) != self.N - 1: return None, None
+
         probs = self.getProbs(words)
+        if len(probs) <= len(exclude): 
+            print("All possible chords exhausted, generating random...")
+            return self.getRandom(), 0
 
         # print("top three options:")
         # for p in probs[:3]: print(p)
@@ -28,7 +35,13 @@ class NGrams:
         r = random.random()
         for prob in probs:
             r -= prob[1]
-            if r < 0: return prob[0], prob[1]
+            if r < 0:
+
+                for excludeChord in exclude:
+                    if json.dumps(prob[0]) == json.dumps(excludeChord.getJson()):
+                        return self.getNext(words, exclude)
+
+                return prob[0], prob[1]
 
         return None, None
         # chordlist, problist = zip(*probs)
@@ -69,6 +82,7 @@ class NGrams:
 
     def build(self, N):
         self.N = N
+        self.ngrams = {}
         for sequence in self.sequences:
             for i in range(len(sequence) - N):
                 gram = [sequence[i + n] for n in range(N)]
@@ -76,4 +90,15 @@ class NGrams:
 
         self.sort()
         # print(self.sortedNgrams[:10])
+
+    def buildUsingToSymbol(self):
+        for song in self.sequences:
+            for i in range(len(song) - self.N):
+                gram = [song[i + n].toSymbol(keyLess=True) for n in range(self.N)]
+                self.add(gram)
+
+        self.sort()
+        # print(self.sortedNgrams[:10])
+
+    
         

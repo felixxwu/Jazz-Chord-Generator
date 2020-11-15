@@ -1,11 +1,11 @@
 from typing import List, Any, Optional
-from lib.symbol.parts.noteSymbol import Note
-from lib.symbol.parts.chordQuality import Quality
-from lib.symbol.parts.chordExtension import Extension
-from lib.symbol.parts.chordAltFifth import Fifth
-from lib.symbol.parts.chordSus import Sus
-from lib.symbol.parts.chordBass import Bass
-from lib.chord import Chord
+from chords.symbol.parts.noteSymbol import Note
+from chords.symbol.parts.chordQuality import Quality
+from chords.symbol.parts.chordExtension import Extension
+from chords.symbol.parts.chordAltFifth import Fifth
+from chords.symbol.parts.chordSus import Sus
+from chords.symbol.parts.chordBass import Bass
+from chords.chord import Chord
 
 class ChordParts:
     def __init__(self, input:str, key):

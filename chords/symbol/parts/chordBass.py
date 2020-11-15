@@ -1,5 +1,5 @@
 from typing import Optional
-from lib.symbol.parts.noteSymbol import Note
+from chords.symbol.parts.noteSymbol import Note
 
 class Bass:
     def __init__(self, bass:str):
