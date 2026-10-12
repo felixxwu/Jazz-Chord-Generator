@@ -2,3 +2,4 @@
 dataset/*.json
 wandb
 venv
+.firebase
