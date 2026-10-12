@@ -1,0 +1,89 @@
+{
+ "tensors": [
+  {
+   "name": "conv_w",
+   "shape": [
+    65,
+    195
+   ],
+   "offset": 0,
+   "type": "int8"
+  },
+  {
+   "name": "conv_b",
+   "shape": [
+    65
+   ],
+   "offset": 12936,
+   "type": "f32"
+  },
+  {
+   "name": "w0",
+   "shape": [
+    2000,
+    130
+   ],
+   "offset": 13196,
+   "type": "int8"
+  },
+  {
+   "name": "b0",
+   "shape": [
+    2000
+   ],
+   "offset": 281196,
+   "type": "f32"
+  },
+  {
+   "name": "bn_w",
+   "shape": [
+    2000
+   ],
+   "offset": 289196,
+   "type": "f32"
+  },
+  {
+   "name": "bn_b",
+   "shape": [
+    2000
+   ],
+   "offset": 297196,
+   "type": "f32"
+  },
+  {
+   "name": "bn_mean",
+   "shape": [
+    2000
+   ],
+   "offset": 305196,
+   "type": "f32"
+  },
+  {
+   "name": "bn_var",
+   "shape": [
+    2000
+   ],
+   "offset": 313196,
+   "type": "f32"
+  },
+  {
+   "name": "out_w",
+   "shape": [
+    464,
+    2000
+   ],
+   "offset": 321196,
+   "type": "int8"
+  },
+  {
+   "name": "out_b",
+   "shape": [
+    464
+   ],
+   "offset": 1251052,
+   "type": "f32"
+  }
+ ],
+ "accuracy": 0.3733447790145874,
+ "similarity": 0.5904141664505005
+}

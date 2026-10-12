@@ -1,6 +1,243 @@
 <!doctype html>
+<html lang="en">
+<head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Jazz Chord Generator</title>
-<h1>Jazz Chord Generator</h1>
-<p>Coming soon. Code: <a href="https://github.com/felixxwu/Jazz-Chord-Generator">github.com/felixxwu/Jazz-Chord-Generator</a></p>
+<meta name="description" content="How should a chord be described to a neural network? Play a progression and compare six chord representations from Felix Wu's research.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Arimo:wght@400;700&family=Tinos:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #ffffff;
+    --ink: #111111;
+    --muted: #555555;
+    --rule: #111111;
+    --faint: #d9d9d9;
+    --grey: #e8e8e8;
+    --key: #c9c9c9;
+    --warn: #a3341f;
+    --serif: Tinos, 'Times New Roman', Times, serif;
+    --sans: Arimo, Helvetica, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font: 17px/1.45 var(--serif); }
+  main { max-width: 980px; margin: 0 auto; padding: 48px 16px 80px; }
+  h1, h2, h3, .caption, summary { font-family: var(--sans); }
+  h1 { font-size: clamp(28px, 5vw, 38px); line-height: 1.15; text-align: center; margin: 0; }
+  .byline { text-align: center; font-style: italic; font-size: 19px; margin: 10px 0 4px; }
+  .subtitle { text-align: center; color: var(--muted); margin: 0 auto 40px; max-width: 620px; }
+  h2 { font-size: 22px; margin: 44px 0 12px; }
+  h2 .num { margin-right: 14px; }
+  p { margin: 0 0 10px; }
+  .muted { color: var(--muted); }
+  a { color: inherit; }
+  .caption { font-size: 14px; text-align: center; margin: 10px auto 0; max-width: 760px; }
+  .left { text-align: left; }
+  sup { font-size: .68em; line-height: 0; }
+  button, select, input[type=text], input[type=search] {
+    font: inherit; color: var(--ink); background: var(--paper); border: 1px solid var(--rule); border-radius: 0; padding: 4px 10px;
+  }
+  button { cursor: pointer; }
+  button:hover:not(:disabled) { background: var(--grey); }
+  button:disabled { opacity: .3; cursor: default; }
+  button.on { background: var(--ink); color: var(--paper); }
+  button.link { border: 0; padding: 0 2px; background: none; text-decoration: underline; text-underline-offset: 3px; }
+  button.link:hover { background: none; color: var(--muted); }
+  input[type=range] { accent-color: var(--ink); width: 110px; vertical-align: middle; }
+  :focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+  /* Section 1: the progression, drawn as boxed chords like Figure 1.1 */
+  .controls { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; font-size: 15px; margin-bottom: 14px; }
+  .controls .spacer { flex: 1; }
+  .strip { display: flex; flex-wrap: wrap; gap: 14px 8px; padding: 18px 0 12px; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); align-items: stretch; }
+  .chord {
+    position: relative; min-width: 64px; padding: 8px 12px 6px; border: 1px solid var(--rule); background: var(--paper);
+    text-align: center; font-size: 20px; line-height: 1.2;
+  }
+  .chord small { display: block; font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .chord.generated { border-style: dashed; }
+  .chord.playing { background: var(--grey); }
+  .chord.reading::after { content: ''; position: absolute; left: -5px; right: -5px; bottom: -9px; border-bottom: 1px solid var(--ink); }
+  .chord .remove { position: absolute; top: -9px; right: -9px; width: 18px; height: 18px; padding: 0; font-size: 12px; line-height: 1; border-radius: 50%; opacity: 0; }
+  .chord:hover .remove, .chord .remove:focus-visible { opacity: 1; }
+  .chord button.play { all: unset; cursor: pointer; }
+  .add { display: flex; align-items: center; border: 1px dashed var(--muted); padding: 0 6px; }
+  .add input { border: 0; width: 160px; padding: 8px 4px; font-size: 16px; }
+  .add input:focus { outline: none; }
+  .add:focus-within { border-style: solid; border-color: var(--ink); }
+  .next { border: 1px solid var(--rule); background: var(--grey); min-width: 64px; padding: 8px 12px 6px; text-align: center; font-size: 20px; line-height: 1.2; }
+  .next small { display: block; font-size: 12px; color: var(--muted); font-family: var(--sans); }
+  .next:hover { background: var(--faint); }
+  .message { font-size: 14px; color: var(--warn); min-height: 21px; margin-top: 6px; font-family: var(--sans); }
+
+  .palette { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; align-items: baseline; font-size: 15px; margin-top: 6px; }
+  .palette .label { font-family: var(--sans); font-size: 13px; color: var(--muted); }
+  .palette .row { gap: 4px; }
+  .palette button { padding: 2px 8px; font-size: 15px; }
+  #song { width: 240px; font-size: 15px; }
+
+  /* Section 2: Figure 1.1 as the control panel */
+  .figure { display: flex; align-items: center; justify-content: center; gap: 0; flex-wrap: wrap; padding: 26px 0 8px; }
+  .fig-group { display: flex; flex-direction: column; align-items: center; }
+  .fig-boxes { display: flex; gap: 8px; align-items: center; }
+  .fig-brace { width: 100%; height: 12px; border: 1px solid var(--ink); border-top: 0; border-radius: 0 0 8px 8px; margin-top: 6px; }
+  .fig-label { font-family: var(--sans); font-size: 14px; margin-top: 4px; }
+  .fig-arrow { width: 44px; height: 2px; background: var(--ink); position: relative; margin: 0 4px; align-self: center; }
+  .fig-arrow::after { content: ''; position: absolute; right: -1px; top: -4px; border-left: 8px solid var(--ink); border-top: 5px solid transparent; border-bottom: 5px solid transparent; }
+  .fig-arrow.double { height: 6px; background: none; border-top: 1.5px solid var(--ink); border-bottom: 1.5px solid var(--ink); }
+  .fig-arrow.double::after { top: -3px; }
+  .fig-box { border: 1px solid var(--rule); padding: 10px 14px; text-align: center; min-width: 120px; background: var(--paper); position: relative; }
+  .fig-box .kicker { display: block; font-family: var(--sans); font-size: 12px; color: var(--muted); }
+  .fig-box.output { background: var(--grey); min-width: 72px; font-size: 22px; }
+  .fig-chord { border: 1px solid var(--rule); padding: 8px 10px; font-size: 18px; min-width: 50px; text-align: center; }
+  .fig-chord.more { border: 0; color: var(--muted); padding: 0 2px; min-width: 0; }
+  @media (max-width: 760px) {
+    .figure { flex-direction: column; gap: 6px; }
+    .fig-arrow { width: 2px; height: 26px; margin: 4px 0; }
+    .fig-arrow::after { right: -4px; top: auto; bottom: -1px; border-top: 8px solid var(--ink); border-left: 5px solid transparent; border-right: 5px solid transparent; border-bottom: 0; }
+    .fig-arrow.double { width: 6px; height: 26px; border: 0; border-left: 1.5px solid var(--ink); border-right: 1.5px solid var(--ink); }
+    .fig-arrow.double::after { right: -3px; }
+  }
+
+  .reps td { vertical-align: middle; padding: 8px; }
+  .reps tbody tr { cursor: pointer; }
+  .reps tbody tr:hover td { background: #f4f4f4; }
+  .reps tr.selected td { background: var(--grey); }
+  .reps tr.selected td:first-child { box-shadow: inset 3px 0 0 var(--ink); }
+  .rep-desc { font-size: 14px; color: var(--muted); max-width: 260px; white-space: normal; }
+  .reps td:first-child { white-space: normal; min-width: 200px; }
+  .reps .bar { width: 70px; height: 7px; border: 1px solid var(--ink); margin-top: 3px; margin-left: auto; }
+  .reps .bar span { display: block; height: 100%; background: var(--ink); }
+  .reps td.guess { font-size: 20px; text-align: center; min-width: 64px; }
+  .fig-box.emphasis { border-width: 2px; font-size: 18px; }
+  h3 { font-size: 16px; margin: 0 0 8px; }
+  .fig-box select { border: 0; padding: 0; font-size: 18px; text-align: center; background: none; cursor: pointer; text-decoration: underline dotted; text-underline-offset: 4px; }
+  .guess-panel { max-width: 560px; margin: 26px auto 0; }
+
+  .circles { display: flex; flex-wrap: wrap; gap: 12px 2px; }
+  .circles .c { position: relative; width: 16px; height: 16px; border: 1px solid var(--ink); border-radius: 50%; font-size: 10px; line-height: 14px; text-align: center; font-family: var(--sans); background: var(--paper); }
+  .circles .c.key { background: var(--key); }
+  .circles .c.on { background: var(--ink); color: var(--paper); }
+  .circles .c[data-n]::after { content: attr(data-n); position: absolute; top: 15px; left: 50%; transform: translateX(-50%); font-size: 9px; color: var(--ink); }
+  .circles .gap { width: 10px; }
+  .circles .dots { font-family: var(--sans); font-size: 12px; align-self: center; padding: 0 3px; }
+  .circles.dense .c { width: 11px; height: 11px; border-color: #888; }
+  .circles.dense { gap: 2px; }
+
+
+  table { border-collapse: collapse; width: 100%; font-size: 16px; }
+  table.booktabs { border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+  table.booktabs thead th { border-bottom: 3px double var(--rule); font-weight: 400; text-align: left; padding: 4px 8px; }
+  table.booktabs td { padding: 3px 8px; }
+  table.booktabs tr.group td { border-top: 1px solid var(--rule); }
+  td.num, th.num { font-variant-numeric: tabular-nums; text-align: right; }
+  .guesses tr { cursor: pointer; }
+  .guesses tr:hover td { background: var(--grey); }
+  .guesses td.chordname { font-size: 18px; }
+  .guesses .bar { width: 100%; min-width: 60px; height: 9px; border: 1px solid var(--ink); }
+  .guesses .bar span { display: block; height: 100%; background: var(--ink); }
+  .guesses button.hear { border: 0; background: none; padding: 0 4px; font-size: 13px; }
+  .status { font-size: 14px; color: var(--muted); min-height: 20px; font-family: var(--sans); }
+  .actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 14px; font-size: 15px; }
+  .others { margin-top: 12px; font-size: 15px; color: var(--muted); }
+  .others b { color: var(--ink); font-weight: 400; }
+
+  details summary { cursor: pointer; font-weight: 700; font-size: 22px; margin: 44px 0 12px; }
+  .table-wrap { overflow-x: auto; }
+  .bold { font-weight: 700; }
+  footer { margin-top: 56px; padding-top: 12px; border-top: 1px solid var(--faint); font-size: 14px; color: var(--muted); text-align: center; }
+  footer a { color: inherit; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Jazz Chord Generator</h1>
+  <p class="byline">Felix Wu</p>
+  <p class="subtitle">How should you describe a chord to a neural network? An interactive companion to <a href="paper.pdf" target="_blank"><em>Data Representations in Neural Network Based Chord Progression Generation Methods</em></a>, University of Edinburgh, 2020 (PDF)</p>
+
+  <h2><span class="num">1</span>Input Progression</h2>
+  <div class="controls">
+    <button id="play" aria-label="Play">▶ Play</button>
+    <label class="row">Loop <input type="checkbox" id="loop"></label>
+    <label class="row">♩ = <input type="range" id="tempo" min="60" max="240" value="140" aria-label="Tempo"><span id="tempo-value">140</span></label>
+    <span class="spacer"></span>
+    <label class="row">Key <select id="key"></select></label>
+    <span class="row" role="group" aria-label="Chord names or Roman numerals">
+      <button id="show-names" class="on">Dm<sup>7</sup></button><button id="show-roman">IIm<sup>7</sup></button>
+    </span>
+    <button id="undo">Undo</button>
+    <button id="clear">Clear</button>
+  </div>
+
+  <div class="strip" id="progression"></div>
+  <div class="message" id="message" aria-live="polite"></div>
+
+  <div class="palette">
+    <span class="label">Root</span><div class="row" id="roots"></div>
+    <span class="label">Chord</span><div class="row" id="qualities"></div>
+    <span class="label">Start from</span>
+    <div class="row">
+      <span class="row" id="presets"></span>
+      <input type="search" id="song" list="songs" placeholder="a standard from the dataset…" aria-label="Load a jazz standard">
+      <datalist id="songs"></datalist>
+    </div>
+  </div>
+
+  <h2><span class="num">2</span>Chord Representations</h2>
+  <p>
+    A network only sees numbers, so every chord has to be written as a list of them. The paper compares six ways of doing that:
+    some only name the chord, others spell out its notes. Click one to use it.
+  </p>
+  <div class="table-wrap">
+    <table class="booktabs reps">
+      <thead><tr><th>Representation</th><th>Your last chord, as the network sees it</th><th class="num">Accuracy</th><th>Guess</th></tr></thead>
+      <tbody id="reps"></tbody>
+    </table>
+  </div>
+  <p class="caption" id="reps-caption"></p>
+
+  <h2><span class="num">3</span>Next Chord</h2>
+  <div class="figure" id="figure"></div>
+  <p class="caption" id="figure-caption"></p>
+
+  <div class="guess-panel">
+    <h3>Most likely next chords</h3>
+    <div class="status" id="status"></div>
+    <table class="booktabs guesses">
+      <thead><tr><th>Chord</th><th></th><th>Probability</th><th class="num"></th></tr></thead>
+      <tbody id="guesses"></tbody>
+    </table>
+    <div class="actions">
+      <button id="generate">Add a guess</button>
+      <button id="generate-4">Add four</button>
+      <label class="row" title="How often less likely chords are picked">safe <input type="range" id="temperature" min="0.3" max="3" step="0.1" value="1" aria-label="Adventurousness"> adventurous</label>
+    </div>
+    <div class="others" id="others"></div>
+  </div>
+
+  <details>
+    <summary><span class="num">4</span>&ensp;Results</summary>
+    <p>
+      Accuracy is how often a network's top guess was exactly the chord that came next in songs held back from training; similarity
+      (sim.) gives partial credit for near misses, using Word2Vec chord embeddings (0 to 1). Describing chords by their notes helped less
+      than expected: plain one-hot encoding came out best with every network, and the two proposed representations landed in between.
+    </p>
+    <div class="table-wrap">
+      <table class="booktabs">
+        <thead id="results-head"></thead>
+        <tbody id="results"></tbody>
+      </table>
+    </div>
+    <p class="caption">Table 1: Accuracy and similarity for each representation and network, with the baselines below, from Tables 6.1 and 6.2 of the paper. * proposed in the paper.</p>
+  </details>
+
+  <footer>
+    <a href="paper.pdf">Paper (PDF)</a> · <a href="https://github.com/felixxwu/Jazz-Chord-Generator">Source on GitHub</a> · <a href="https://felixwu.me">felixwu.me</a>
+  </footer>
+</main>
+<script type="module" src="app.js"></script>
+</body>
+</html>
